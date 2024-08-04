@@ -17,6 +17,9 @@ function App() {
   });
   const [todoInput, setTodoInput] = useState("");
   const [notTodoInput, setNotTodoInput] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [editingList, setEditingList] = useState(null); // New state to track the currently edited list
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
@@ -65,11 +68,43 @@ function App() {
     setToList([...toList, itemToMove]);
   };
 
+  const startEditing = (listName, index, text) => {
+    setEditingIndex(index);
+    setEditingText(text);
+    setEditingList(listName);
+  };
+
+  const cancelEditing = () => {
+    setEditingIndex(null);
+    setEditingText("");
+    setEditingList(null);
+  };
+
+  const saveEdit = (list, setList, index) => {
+    if (editingText.trim() !== "") {
+      const newList = list.map((item, i) =>
+        i === index ? { ...item, text: editingText } : item
+      );
+      setList(newList);
+      setEditingIndex(null);
+      setEditingText("");
+      setEditingList(null);
+    }
+  };
+
+  const handleEditKeyDown = (e, list, setList, index) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveEdit(list, setList, index);
+    }
+  };
+
   const renderTodoList = (
     list,
     setList,
     otherList,
     setOtherList,
+    listName,
     isNotTodoList = false
   ) => (
     <ul className="mt-4 flex-col justify-center">
@@ -78,43 +113,83 @@ function App() {
           key={index}
           className="flex items-center justify-between text-zinc-950 dark:text-slate-200 bg-slate-300 dark:bg-gray-700 p-2 rounded mb-2"
         >
-          <span className={item.completed ? "line-through" : ""}>
-            {item.text}
-          </span>
+          {editingIndex === index && editingList === listName ? (
+            <input
+              type="text"
+              value={editingText}
+              onChange={(e) => setEditingText(e.target.value)}
+              onKeyDown={(e) => handleEditKeyDown(e, list, setList, index)}
+              className="mr-2 p-1 text-black"
+              autoFocus
+            />
+          ) : (
+            <span className={item.completed ? "line-through" : ""}>
+              {item.text}
+            </span>
+          )}
           <div>
-            <button
-              onClick={() => toggleComplete(list, setList, index)}
-              className="mr-2"
-            >
-              <img
-                src={`https://img.icons8.com/color/48/000000/${
-                  item.completed ? "checked-checkbox" : "unchecked-checkbox"
-                }.png`}
-                alt="Complete"
-                className="w-6 h-6"
-              />
-            </button>
-            <button
-              onClick={() =>
-                transferTodo(list, setList, otherList, setOtherList, index)
-              }
-              className="mr-2"
-            >
-              <img
-                src={`https://img.icons8.com/color/48/000000/${
-                  isNotTodoList ? "todo-list" : "do-not-disturb"
-                }.png`}
-                alt="Transfer"
-                className="w-6 h-6"
-              />
-            </button>
-            <button onClick={() => deleteTodo(list, setList, index)}>
-              <img
-                src="https://img.icons8.com/color/48/000000/trash.png"
-                alt="Delete"
-                className="w-6 h-6"
-              />
-            </button>
+            {editingIndex === index && editingList === listName ? (
+              <>
+                <button
+                  onClick={() => saveEdit(list, setList, index)}
+                  className="mr-2 bg-green-500 text-white p-1 rounded"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="mr-2 bg-gray-500 text-white p-1 rounded"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => toggleComplete(list, setList, index)}
+                  className="mr-2"
+                >
+                  <img
+                    src={`https://img.icons8.com/color/48/000000/${
+                      item.completed ? "checked-checkbox" : "unchecked-checkbox"
+                    }.png`}
+                    alt="Complete"
+                    className="w-6 h-6"
+                  />
+                </button>
+                <button
+                  onClick={() => startEditing(listName, index, item.text)}
+                  className="mr-2"
+                >
+                  <img
+                    src="https://img.icons8.com/color/48/000000/edit.png"
+                    alt="Edit"
+                    className="w-6 h-6"
+                  />
+                </button>
+                <button
+                  onClick={() =>
+                    transferTodo(list, setList, otherList, setOtherList, index)
+                  }
+                  className="mr-2"
+                >
+                  <img
+                    src={`https://img.icons8.com/color/48/000000/${
+                      isNotTodoList ? "todo-list" : "do-not-disturb"
+                    }.png`}
+                    alt="Transfer"
+                    className="w-6 h-6"
+                  />
+                </button>
+                <button onClick={() => deleteTodo(list, setList, index)}>
+                  <img
+                    src="https://img.icons8.com/color/48/000000/trash.png"
+                    alt="Delete"
+                    className="w-6 h-6"
+                  />
+                </button>
+              </>
+            )}
           </div>
         </li>
       ))}
@@ -202,7 +277,7 @@ function App() {
                   Add To-Do
                 </button>
               </div>
-              {renderTodoList(todos, setTodos, notTodos, setNotTodos)}
+              {renderTodoList(todos, setTodos, notTodos, setNotTodos, "todos")}
             </div>
             <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-300 dark:bg-gray-600"></div>
             <div className="w-full h-fit md:w-1/2 text-slate-200 bg-red-600 dark:bg-red-900 p-4 rounded-b md:rounded-lg">
@@ -254,7 +329,14 @@ function App() {
                   Add Not To-Do
                 </button>
               </div>
-              {renderTodoList(notTodos, setNotTodos, todos, setTodos, true)}
+              {renderTodoList(
+                notTodos,
+                setNotTodos,
+                todos,
+                setTodos,
+                "notTodos",
+                true
+              )}
             </div>
           </div>
         </section>
