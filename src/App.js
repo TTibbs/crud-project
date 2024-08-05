@@ -107,7 +107,7 @@ function App() {
     listName,
     isNotTodoList = false
   ) => (
-    <ul className="mt-4 flex-col justify-center">
+    <ul className="mt-4 flex-col items-center justify-center">
       {list.map((item, index) => (
         <li
           key={index}
@@ -127,7 +127,7 @@ function App() {
               {item.text}
             </span>
           )}
-          <div>
+          <div className="flex items-center justify-between">
             {editingIndex === index && editingList === listName ? (
               <>
                 <button
@@ -146,6 +146,16 @@ function App() {
             ) : (
               <>
                 <button
+                  onClick={() => startEditing(listName, index, item.text)}
+                  className="mr-2"
+                >
+                  <img
+                    src="https://img.icons8.com/color/48/000000/edit.png"
+                    alt="Edit"
+                    className="w-6 h-6"
+                  />
+                </button>
+                <button
                   onClick={() => toggleComplete(list, setList, index)}
                   className="mr-2"
                 >
@@ -158,12 +168,12 @@ function App() {
                   />
                 </button>
                 <button
-                  onClick={() => startEditing(listName, index, item.text)}
+                  onClick={() => deleteTodo(list, setList, index)}
                   className="mr-2"
                 >
                   <img
-                    src="https://img.icons8.com/color/48/000000/edit.png"
-                    alt="Edit"
+                    src="https://img.icons8.com/color/48/000000/trash.png"
+                    alt="Delete"
                     className="w-6 h-6"
                   />
                 </button>
@@ -171,20 +181,12 @@ function App() {
                   onClick={() =>
                     transferTodo(list, setList, otherList, setOtherList, index)
                   }
-                  className="mr-2"
                 >
                   <img
                     src={`https://img.icons8.com/color/48/000000/${
-                      isNotTodoList ? "todo-list" : "do-not-disturb"
+                      isNotTodoList ? "ok" : "do-not-disturb"
                     }.png`}
                     alt="Transfer"
-                    className="w-6 h-6"
-                  />
-                </button>
-                <button onClick={() => deleteTodo(list, setList, index)}>
-                  <img
-                    src="https://img.icons8.com/color/48/000000/trash.png"
-                    alt="Delete"
                     className="w-6 h-6"
                   />
                 </button>
@@ -272,7 +274,7 @@ function App() {
                   onClick={() =>
                     addTodo(todos, setTodos, todoInput, setTodoInput)
                   }
-                  className="mt-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 border-slate-100 border-2"
+                  className="mt-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 border-slate-100 border-2"
                 >
                   Add To-Do
                 </button>
@@ -324,7 +326,7 @@ function App() {
                       setNotTodoInput
                     )
                   }
-                  className="mt-2 bg-red-400 text-white p-2 rounded hover:bg-red-500 border-slate-100 border-2"
+                  className="mt-2 bg-red-400 text-white p-2 rounded-lg hover:bg-red-500 border-slate-100 border-2"
                 >
                   Add Not To-Do
                 </button>
